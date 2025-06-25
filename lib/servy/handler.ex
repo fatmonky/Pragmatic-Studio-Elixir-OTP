@@ -1,3 +1,5 @@
+require Logger
+
 defmodule Servy.Handler do
   def handler(request) do
     request
@@ -19,11 +21,15 @@ defmodule Servy.Handler do
   def emojify(conv), do: conv
 
   def track(%{status: 404, path: path} = conv) do
+    Logger.warn("#{path} is awry")
     IO.puts("Warning: #{path} is on the loose!")
     conv
   end
 
-  def track(conv), do: conv
+  def track(conv) do
+    Logger.info("all normal here")
+    conv
+  end
 
   def rewrite_path(%{path: "/wildlife"} = conv) do
     %{conv | path: "/wildthings"}
