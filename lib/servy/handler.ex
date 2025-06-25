@@ -2,10 +2,17 @@ defmodule Servy.Handler do
   def handler(request) do
     request
     |> parse
+    |> rewrite_path
     |> log
     |> route
     |> format_response
   end
+
+  def rewrite_path(%{path: "/wildlife"} = conv) do
+    %{conv | path: "/wildthings"}
+  end
+
+  def rewrite_path(conv), do: conv
 
   def log(conv), do: IO.inspect(conv)
 
@@ -39,7 +46,7 @@ defmodule Servy.Handler do
     %{conv | status: 200, resp_body: "Bear #{id}"}
   end
 
-  def route(conv, "DELETE", "/bears/" <> id) do
+  def route(conv, "DELETE", "/bears/" <> _id) do
     %{conv | status: 403, resp_body: "Deleting a bear is forbidden!"}
   end
 
@@ -121,6 +128,18 @@ IO.puts(response)
 # Exercise - add Delete request
 request = """
 DELETE /bears/1 HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handler(request)
+
+IO.puts(response)
+
+request = """
+GET /wildlife HTTP/1.1
 Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
