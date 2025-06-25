@@ -6,8 +6,15 @@ defmodule Servy.Handler do
     |> log
     |> route
     |> track
+    |> emojify
     |> format_response
   end
+
+  def emojify(%{status: 200} = conv) do
+    %{conv | resp_body: "😃"}
+  end
+
+  def emojify(conv), do: conv
 
   def track(%{status: 404, path: path} = conv) do
     IO.puts("Warning: #{path} is on the loose!")
@@ -67,7 +74,6 @@ defmodule Servy.Handler do
   end
 
   def format_response(conv) do
-    # TODO: Use values in the map to create an HTTP response string:
     """
     HTTP/1.1 #{conv.status} #{status_reason(conv.status)}
     Content-Type: text/html
