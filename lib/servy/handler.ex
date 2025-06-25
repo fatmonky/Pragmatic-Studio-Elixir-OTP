@@ -11,7 +11,9 @@ defmodule Servy.Handler do
   end
 
   def emojify(%{status: 200} = conv) do
-    %{conv | resp_body: "😃"}
+    emojies = "😃"
+    emojified_resp_body = emojies <> "\n" <> conv.resp_body <> "\n" <> emojies
+    %{conv | resp_body: emojified_resp_body}
   end
 
   def emojify(conv), do: conv
