@@ -37,10 +37,6 @@ defmodule Servy.Handler do
 
   def emojify(%Conv{} = conv), do: conv
 
-  # def route(conv) do
-  # route(conv, conv.method, conv.path)
-  # end
-
   def route(%Conv{method: "GET", path: "/wildthings"} = conv) do
     %{
       conv
@@ -56,42 +52,6 @@ defmodule Servy.Handler do
     |> handle_file(conv)
   end
 
-  # def route(%{method: "GET", path: "/about"} = conv) do
-  #   file =
-  #     Path.expand("../../pages", __DIR__)
-  #     |> Path.join("about.html")
-
-  #   case File.read(file) do
-  #     {:ok, content} ->
-  #       %{conv | status: 200, resp_body: content}
-
-  #     {:error, :enoent} ->
-  #       %{conv | status: 404, resp_body: "File not found!"}
-
-  #     {:error, reason} ->
-  #       %{conv | status: 500, resp_body: "File error: #{reason}"}
-  #   end
-  # end
-
-  # ch9 Exercise read HTML form file
-  # case
-  # def route(%{method: "GET", path: "/bears/new"} = conv) do
-  #   file =
-  #     Path.expand("../../pages/", __DIR__)
-  #     |> Path.join("form.html")
-
-  #   case File.read(file) do
-  #     {:ok, content} ->
-  #       %{conv | status: 200, resp_body: content}
-
-  #     {:error, :enoent} ->
-  #       %{conv | status: 404, resp_body: "File not found!"}
-
-  #     {:error, reason} ->
-  #       %{conv | status: 500, resp_body: "File error: #{reason}"}
-  #   end
-  # end
-
   # function clause approach
   def route(%Conv{method: "GET", path: "/bears/new"} = conv) do
     @pages_path
@@ -99,32 +59,6 @@ defmodule Servy.Handler do
     |> File.read()
     |> handle_form(conv)
   end
-
-  # ch9 handle arbitrary page files
-  def route(%Conv{path: "/pages/" <> page} = conv) do
-    file =
-      Path.expand("../../pages/", __DIR__)
-      |> Path.join(page)
-
-    case File.read(file) do
-      {:ok, content} ->
-        %{conv | status: 200, resp_body: content}
-
-      {:error, :enoent} ->
-        %{conv | status: 404, resp_body: "File not found!"}
-
-      {:error, reason} ->
-        %{conv | status: 500, resp_body: "File error: #{reason} "}
-    end
-  end
-
-  # Model answer from the Clarks: (but noted that this isn't what you'll want to do in prod!)
-  # def route(%{method: "GET", path: "/pages/" <> file} = conv) do
-  #   Path.expand("../../pages", __DIR__)
-  #   |> Path.join(file <> ".html")
-  #   |> File.read
-  #   |> handle_file(conv)
-  # end
 
   def route(%Conv{method: "GET", path: "/bears"} = conv) do
     %{conv | status: 200, resp_body: "Pandas, Black, Sun"}
@@ -219,94 +153,6 @@ IO.puts(response)
 
 request = """
 GET /about HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
-
-"""
-
-response = Servy.Handler.handler(request)
-
-IO.puts(response)
-
-# Exercise - add Delete request
-request = """
-DELETE /bears/1 HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
-
-"""
-
-response = Servy.Handler.handler(request)
-
-IO.puts(response)
-
-# ch 8 Exercise - add query request
-request = """
-GET /bears?id=1 HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
-
-"""
-
-response = Servy.Handler.handler(request)
-
-IO.puts(response)
-
-request = """
-GET /about HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
-
-"""
-
-response = Servy.Handler.handler(request)
-
-IO.puts(response)
-
-# ch9 - Exercise
-request = """
-GET /bears/new HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
-
-"""
-
-response = Servy.Handler.handler(request)
-
-IO.puts(response)
-
-# ch9 - Exercise Arbitrary files
-request = """
-GET /pages/contact HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
-
-"""
-
-response = Servy.Handler.handler(request)
-
-IO.puts(response)
-
-request = """
-GET /pages/faq HTTP/1.1
-Host: example.com
-User-Agent: ExampleBrowser/1.0
-Accept: */*
-
-"""
-
-response = Servy.Handler.handler(request)
-
-IO.puts(response)
-
-request = """
-GET /pages/wtf HTTP/1.1
 Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
