@@ -5,6 +5,9 @@ defmodule Servy.Handler do
 
   @pages_path Path.expand("../../pages", __DIR__)
 
+  import Servy.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
+  import Servy.Parser, only: [parse: 1]
+
   @doc "Transforms the request into a request"
   def handler(request) do
     request
@@ -30,40 +33,6 @@ defmodule Servy.Handler do
   end
 
   def emojify(conv), do: conv
-
-  @doc "Logs 404 requests"
-  def track(%{status: 404, path: path} = conv) do
-    # Logger.warn("#{path} is awry")
-    IO.puts("Warning: #{path} is on the loose!")
-    conv
-  end
-
-  def track(conv) do
-    # Logger.info("all normal here")
-    conv
-  end
-
-  def rewrite_path(%{path: "/wildlife"} = conv) do
-    %{conv | path: "/wildthings"}
-  end
-
-  def rewrite_path(%{path: "/bears?id=" <> id} = conv) do
-    %{conv | path: "/bears/#{id}"}
-  end
-
-  def rewrite_path(conv), do: conv
-
-  def log(conv), do: IO.inspect(conv)
-
-  def parse(request) do
-    [method, route, _] =
-      request
-      |> String.split("\n")
-      |> List.first()
-      |> String.split(" ")
-
-    %{method: method, path: route, status: nil, status_reason: "", resp_body: ""}
-  end
 
   # def route(conv) do
   # route(conv, conv.method, conv.path)
