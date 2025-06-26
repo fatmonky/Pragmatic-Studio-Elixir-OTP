@@ -1,4 +1,4 @@
-require Logger
+# require Logger
 
 defmodule Servy.Handler do
   def handler(request) do
@@ -21,13 +21,13 @@ defmodule Servy.Handler do
   def emojify(conv), do: conv
 
   def track(%{status: 404, path: path} = conv) do
-    Logger.warn("#{path} is awry")
+    # Logger.warn("#{path} is awry")
     IO.puts("Warning: #{path} is on the loose!")
     conv
   end
 
   def track(conv) do
-    Logger.info("all normal here")
+    # Logger.info("all normal here")
     conv
   end
 
@@ -71,6 +71,10 @@ defmodule Servy.Handler do
 
   def route(%{method: "GET", path: "/bears/" <> id} = conv) do
     %{conv | status: 200, resp_body: "Bear #{id}"}
+  end
+
+  def route(%{method: "GET", path: "/about"} = conv) do
+    %{conv | status: 200, resp_body: "contents of a file"}
   end
 
   def route(%{method: "DELETE", path: "/bears" <> _id} = conv) do
@@ -153,6 +157,18 @@ IO.puts(response)
 
 request = """
 GET /wildlife HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handler(request)
+
+IO.puts(response)
+
+request = """
+GET /about HTTP/1.1
 Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
