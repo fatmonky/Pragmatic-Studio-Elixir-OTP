@@ -1,6 +1,11 @@
 # require Logger
 
 defmodule Servy.Handler do
+  @moduledoc "Handles HTTP requests."
+
+  @pages_path Path.expand("../../pages", __DIR__)
+
+  @doc "Transforms the request into a request"
   def handler(request) do
     request
     |> parse
@@ -18,8 +23,15 @@ defmodule Servy.Handler do
     %{conv | resp_body: emojified_resp_body}
   end
 
+  def emojify(%{status: 403} = conv) do
+    emojies = "🤬"
+    emojified_resp_body = emojies <> "\n" <> conv.resp_body <> "\n" <> emojies
+    %{conv | resp_body: emojified_resp_body}
+  end
+
   def emojify(conv), do: conv
 
+  @doc "Logs 404 requests"
   def track(%{status: 404, path: path} = conv) do
     # Logger.warn("#{path} is awry")
     IO.puts("Warning: #{path} is on the loose!")
@@ -64,6 +76,109 @@ defmodule Servy.Handler do
         resp_body: "Bears, Lions, Tigers, Tapirs"
     }
   end
+
+  def route(%{method: "GET", path: "/about"} = conv) do
+    @pages_path
+    |> Path.join("about.html")
+    |> File.read()
+    |> handle_file(conv)
+  end
+
+  def handle_file({:ok, content}, conv) do
+    %{conv | status: 200, resp_body: content}
+  end
+
+  def handle_file({:error, :enoent}, conv) do
+    %{conv | status: 404, resp_body: "File not found!"}
+  end
+
+  def handle_file({:error, reason}, conv) do
+    %{conv | status: 500, resp_body: "File error: #{reason}"}
+  end
+
+  # def route(%{method: "GET", path: "/about"} = conv) do
+  #   file =
+  #     Path.expand("../../pages", __DIR__)
+  #     |> Path.join("about.html")
+
+  #   case File.read(file) do
+  #     {:ok, content} ->
+  #       %{conv | status: 200, resp_body: content}
+
+  #     {:error, :enoent} ->
+  #       %{conv | status: 404, resp_body: "File not found!"}
+
+  #     {:error, reason} ->
+  #       %{conv | status: 500, resp_body: "File error: #{reason}"}
+  #   end
+  # end
+
+  # ch9 Exercise read HTML form file
+  # case
+  # def route(%{method: "GET", path: "/bears/new"} = conv) do
+  #   file =
+  #     Path.expand("../../pages/", __DIR__)
+  #     |> Path.join("form.html")
+
+  #   case File.read(file) do
+  #     {:ok, content} ->
+  #       %{conv | status: 200, resp_body: content}
+
+  #     {:error, :enoent} ->
+  #       %{conv | status: 404, resp_body: "File not found!"}
+
+  #     {:error, reason} ->
+  #       %{conv | status: 500, resp_body: "File error: #{reason}"}
+  #   end
+  # end
+
+  # function clause approach
+  def route(%{method: "GET", path: "/bears/new"} = conv) do
+    @pages_path
+    |> Path.join("form.html")
+    |> File.read()
+    |> handle_form(conv)
+  end
+
+  def handle_form({:ok, content}, conv) do
+    %{conv | status: 200, resp_body: content}
+  end
+
+  def handle_form({:error, :enoent}, conv) do
+    %{conv | status: 404, resp_body: "File not found!"}
+  end
+
+  def handle_form({:error, reason}, conv) do
+    %{conv | status: 500, resp_body: "File error: #{reason}"}
+  end
+
+  # ch9 handle arbitrary page files
+  def route(%{path: "/pages/" <> page} = conv) do
+    file =
+      Path.expand("../../pages/", __DIR__)
+      |> Path.join(page)
+
+    IO.puts("DEBUG: file is #{file}")
+
+    case File.read(file) do
+      {:ok, content} ->
+        %{conv | status: 200, resp_body: content}
+
+      {:error, :enoent} ->
+        %{conv | status: 404, resp_body: "File not found!"}
+
+      {:error, reason} ->
+        %{conv | status: 500, resp_body: "File error: #{reason} "}
+    end
+  end
+
+  # Model answer from the Clarks: (but noted that this isn't what you'll want to do in prod!)
+  # def route(%{method: "GET", path: "/pages/" <> file} = conv) do
+  #   Path.expand("../../pages", __DIR__)
+  #   |> Path.join(file <> ".html")
+  #   |> File.read
+  #   |> handle_file(conv)
+  # end
 
   def route(%{method: "GET", path: "/bears"} = conv) do
     %{conv | status: 200, resp_body: "Pandas, Black, Sun"}
@@ -192,9 +307,71 @@ response = Servy.Handler.handler(request)
 
 IO.puts(response)
 
-# Exercise - add query request
+# ch 8 Exercise - add query request
 request = """
 GET /bears?id=1 HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handler(request)
+
+IO.puts(response)
+
+request = """
+GET /about HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handler(request)
+
+IO.puts(response)
+
+# ch9 - Exercise
+request = """
+GET /bears/new HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handler(request)
+
+IO.puts(response)
+
+# ch9 - Exercise Arbitrary files
+request = """
+GET /pages/contact HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handler(request)
+
+IO.puts(response)
+
+request = """
+GET /pages/faq HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handler(request)
+
+IO.puts(response)
+
+request = """
+GET /pages/wtf HTTP/1.1
 Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
