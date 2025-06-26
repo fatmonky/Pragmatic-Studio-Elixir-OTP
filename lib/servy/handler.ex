@@ -7,6 +7,7 @@ defmodule Servy.Handler do
 
   import Servy.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
   import Servy.Parser, only: [parse: 1]
+  import Servy.FileHandler, only: [handle_file: 2, handle_form: 2]
 
   @doc "Transforms the request into a request"
   def handler(request) do
@@ -53,18 +54,6 @@ defmodule Servy.Handler do
     |> handle_file(conv)
   end
 
-  def handle_file({:ok, content}, conv) do
-    %{conv | status: 200, resp_body: content}
-  end
-
-  def handle_file({:error, :enoent}, conv) do
-    %{conv | status: 404, resp_body: "File not found!"}
-  end
-
-  def handle_file({:error, reason}, conv) do
-    %{conv | status: 500, resp_body: "File error: #{reason}"}
-  end
-
   # def route(%{method: "GET", path: "/about"} = conv) do
   #   file =
   #     Path.expand("../../pages", __DIR__)
@@ -107,18 +96,6 @@ defmodule Servy.Handler do
     |> Path.join("form.html")
     |> File.read()
     |> handle_form(conv)
-  end
-
-  def handle_form({:ok, content}, conv) do
-    %{conv | status: 200, resp_body: content}
-  end
-
-  def handle_form({:error, :enoent}, conv) do
-    %{conv | status: 404, resp_body: "File not found!"}
-  end
-
-  def handle_form({:error, reason}, conv) do
-    %{conv | status: 500, resp_body: "File error: #{reason}"}
   end
 
   # ch9 handle arbitrary page files
