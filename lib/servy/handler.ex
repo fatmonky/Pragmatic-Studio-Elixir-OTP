@@ -140,6 +140,34 @@ defmodule Servy.Handler do
     %{conv | status: 500, resp_body: "File error: #{reason}"}
   end
 
+  # ch9 handle arbitrary page files
+  def route(%{path: "/pages/" <> page} = conv) do
+    file =
+      Path.expand("../../pages/", __DIR__)
+      |> Path.join(page)
+
+    IO.puts("DEBUG: file is #{file}")
+
+    case File.read(file) do
+      {:ok, content} ->
+        %{conv | status: 200, resp_body: content}
+
+      {:error, :enoent} ->
+        %{conv | status: 404, resp_body: "File not found!"}
+
+      {:error, reason} ->
+        %{conv | status: 500, resp_body: "File error: #{reason} "}
+    end
+  end
+
+  # Model answer from the Clarks: (but noted that this isn't what you'll want to do in prod!)
+  # def route(%{method: "GET", path: "/pages/" <> file} = conv) do
+  #   Path.expand("../../pages", __DIR__)
+  #   |> Path.join(file <> ".html")
+  #   |> File.read
+  #   |> handle_file(conv)
+  # end
+
   def route(%{method: "GET", path: "/bears"} = conv) do
     %{conv | status: 200, resp_body: "Pandas, Black, Sun"}
   end
@@ -279,6 +307,43 @@ IO.puts(response)
 # ch9 - Exercise
 request = """
 GET /bears/new HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handler(request)
+
+IO.puts(response)
+
+# ch9 - Exercise Arbitrary files
+request = """
+GET /pages/contact HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handler(request)
+
+IO.puts(response)
+
+request = """
+GET /pages/faq HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handler(request)
+
+IO.puts(response)
+
+request = """
+GET /pages/wtf HTTP/1.1
 Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
