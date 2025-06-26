@@ -101,6 +101,45 @@ defmodule Servy.Handler do
   #   end
   # end
 
+  # ch9 Exercise read HTML form file
+  # case
+  # def route(%{method: "GET", path: "/bears/new"} = conv) do
+  #   file =
+  #     Path.expand("../../pages/", __DIR__)
+  #     |> Path.join("form.html")
+
+  #   case File.read(file) do
+  #     {:ok, content} ->
+  #       %{conv | status: 200, resp_body: content}
+
+  #     {:error, :enoent} ->
+  #       %{conv | status: 404, resp_body: "File not found!"}
+
+  #     {:error, reason} ->
+  #       %{conv | status: 500, resp_body: "File error: #{reason}"}
+  #   end
+  # end
+
+  # function clause approach
+  def route(%{method: "GET", path: "/bears/new"} = conv) do
+    Path.expand("../../pages/", __DIR__)
+    |> Path.join("form.html")
+    |> File.read()
+    |> handle_form(conv)
+  end
+
+  def handle_form({:ok, content}, conv) do
+    %{conv | status: 200, resp_body: content}
+  end
+
+  def handle_form({:error, :enoent}, conv) do
+    %{conv | status: 404, resp_body: "File not found!"}
+  end
+
+  def handle_form({:error, reason}, conv) do
+    %{conv | status: 500, resp_body: "File error: #{reason}"}
+  end
+
   def route(%{method: "GET", path: "/bears"} = conv) do
     %{conv | status: 200, resp_body: "Pandas, Black, Sun"}
   end
@@ -227,6 +266,19 @@ IO.puts(response)
 
 request = """
 GET /about HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handler(request)
+
+IO.puts(response)
+
+# ch9 - Exercise
+request = """
+GET /bears/new HTTP/1.1
 Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
