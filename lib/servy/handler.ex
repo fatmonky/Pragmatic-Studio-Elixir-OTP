@@ -16,6 +16,12 @@ defmodule Servy.Handler do
     %{conv | resp_body: emojified_resp_body}
   end
 
+  def emojify(%{status: 403} = conv) do
+    emojies = "🤬"
+    emojified_resp_body = emojies <> "\n" <> conv.resp_body <> "\n" <> emojies
+    %{conv | resp_body: emojified_resp_body}
+  end
+
   def emojify(conv), do: conv
 
   def track(%{status: 404, path: path} = conv) do
@@ -57,6 +63,22 @@ defmodule Servy.Handler do
       | status: 200,
         resp_body: "Bears, Lions, Tigers, Tapirs"
     }
+  end
+
+  def route(%{method: "GET", path: "/about"} = conv) do
+    file = Path.expand("../../pages", __DIR__)
+    filepath = Path.join(file, "about.html")
+
+    case File.read(filepath) do
+      {:ok, content} ->
+        %{conv | status: 200, resp_body: content}
+
+      {:error, :enoent} ->
+        %{conv | status: 404, resp_body: "File not found!"}
+
+      {:error, reason} ->
+        %{conv | status: 500, resp_body: "File error: #{reason}"}
+    end
   end
 
   def route(%{method: "GET", path: "/bears"} = conv) do
@@ -170,9 +192,21 @@ response = Servy.Handler.handler(request)
 
 IO.puts(response)
 
-# Exercise - add query request
+# ch 8 Exercise - add query request
 request = """
 GET /bears?id=1 HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handler(request)
+
+IO.puts(response)
+
+request = """
+GET /about HTTP/1.1
 Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
