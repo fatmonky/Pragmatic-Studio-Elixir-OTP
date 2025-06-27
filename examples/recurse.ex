@@ -13,10 +13,13 @@ defmodule Recurse do
     triple(list, [])
   end
 
-  def triple([head | tail], _new_list) do
+  def triple([head | tail], new_list) do
     # take each head multiply by 3
     # add to new list with each recursion
-    [head * 3 | triple(tail, [])]
+    [head * 3 | triple(tail, new_list)]
+    # IO.inspect(head)
+    # IO.inspect(tail)
+    # IO.inspect(new_list)
     # triple(tail, new_list)
   end
 
