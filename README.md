@@ -1,8 +1,8 @@
-# Servy
+# Servy - the web server built with Elixir and OTP
 
-**TODO: Add description**
+This is my code-along with [Pragmatic Studio's Elixir course](https://pragmaticstudio.com/courses/elixir). No Gen AI, just plain vanilla coding-along (with my own mistakes); see commit history for details. 
 
-## Installation
+## Installation (auto-generated instructions with mix)
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 by adding `servy` to your list of dependencies in `mix.exs`:
