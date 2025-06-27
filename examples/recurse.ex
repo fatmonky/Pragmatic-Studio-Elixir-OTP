@@ -13,17 +13,18 @@ defmodule Recurse do
     triple(list, [])
   end
 
-  def triple([head | tail], new_list) do
-    # take each head multiply by 3
-    # add to new list with each recursion
-    [head * 3 | triple(tail, new_list)]
+  defp triple([head | tail], new_list) do
+    triple(tail, [head * 3 | new_list])
     # IO.inspect(head)
     # IO.inspect(tail)
     # IO.inspect(new_list)
-    # triple(tail, new_list)
+    # Note 27 June: see this link for explanation for why my previous commit was
+    # not tail-call optimised: https://chatgpt.com/share/685e5091-4028-8006-94b4-cdfbd280cd84
   end
 
-  def triple([], new_list), do: new_list
+  defp triple([], new_list) do
+    new_list |> Enum.reverse()
+  end
 end
 
 nums = [1, 2, 3, 4, 5]
