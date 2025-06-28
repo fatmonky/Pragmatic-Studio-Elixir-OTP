@@ -25,6 +25,45 @@ defmodule Recurse do
   defp triple([], new_list) do
     new_list |> Enum.reverse()
   end
+
+  # ch 15 ex 3
+  """
+   So how does map work? As the documentation says, it returns a new list where each item is the resulting of invoking the function on each corresponding item of the list.
+   Right, but how does it do that?
+
+  Well, you already know that too!
+  You know how to recursively traverse a list.
+  And you know how to create a new list from a head and a tail.
+  And you now know how to invoke an anonymous function. So you can implement your own version of map to validate what you already know!
+
+   In the Recurse module (or a stand-alone module of your choosing),
+   define a my_map function that acts just like Enum.map. For example:
+
+  > nums = [1, 2, 3, 4, 5]
+
+  > Recurse.my_map(nums, &(&1 * 2))
+  [2, 4, 6, 8, 10]
+
+  > Recurse.my_map(nums, &(&1 * 4))
+  [4, 8, 12, 16, 20]
+
+  > Recurse.my_map(nums, &(&1 * 5))
+  [5, 10, 15, 20, 25]
+
+  """
+
+  def my_map(list, fun) do
+    my_map(list, fun, [])
+  end
+
+  def my_map([head | tail], fun, new_list) do
+    new_list = [fun.(head) | new_list]
+    my_map(tail, fun, new_list)
+  end
+
+  def my_map([], _fun, new_list) do
+    new_list |> Enum.reverse()
+  end
 end
 
 nums = [1, 2, 3, 4, 5]
@@ -32,4 +71,7 @@ sum = Recurse.loopy(nums, 0)
 IO.puts("The sum is #{sum}")
 
 new_list = Recurse.triple(nums)
+IO.inspect(new_list)
+
+new_list = Recurse.my_map(nums, &(&1 * 2))
 IO.inspect(new_list)
