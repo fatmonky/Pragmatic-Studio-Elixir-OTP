@@ -70,7 +70,7 @@ defmodule Servy.Handler do
     BearController.show(conv, params)
   end
 
-  def route(%Conv{method: "DELETE", path: "/bears" <> _id} = conv) do
+  def route(%Conv{method: "DELETE", path: "/bears/" <> id} = conv) do
     BearController.delete(conv, conv.params)
   end
 
@@ -175,6 +175,21 @@ Content-Type: application/x-www-form-urlencoded
 Content-Length: 21
 
 name=Baloo&type=Brown
+"""
+
+response = Servy.Handler.handler(request)
+
+IO.puts(response)
+
+# ch 15 exercise
+# # Exercise - add Delete request
+
+request = """
+DELETE /bears/1 HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
 """
 
 response = Servy.Handler.handler(request)
