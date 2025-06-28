@@ -64,6 +64,14 @@ defmodule Recurse do
   def my_map([], _fun, new_list) do
     new_list |> Enum.reverse()
   end
+
+  # model answer: defmodule(Recurse) do
+  #   def my_map([head | tail], fun) do
+  #     [fun.(head) | my_map(tail, fun)]
+  #   end
+
+  #   def my_map([], _fun), do: []
+  # end
 end
 
 nums = [1, 2, 3, 4, 5]
