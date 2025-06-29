@@ -28,14 +28,6 @@ defmodule Recurse do
 
   # ch 15 ex 3
   """
-   So how does map work? As the documentation says, it returns a new list where each item is the resulting of invoking the function on each corresponding item of the list.
-   Right, but how does it do that?
-
-  Well, you already know that too!
-  You know how to recursively traverse a list.
-  And you know how to create a new list from a head and a tail.
-  And you now know how to invoke an anonymous function. So you can implement your own version of map to validate what you already know!
-
    In the Recurse module (or a stand-alone module of your choosing),
    define a my_map function that acts just like Enum.map. For example:
 
