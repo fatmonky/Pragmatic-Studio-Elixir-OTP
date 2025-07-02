@@ -25,7 +25,7 @@ defmodule Servy.Parser do
     Enum.reduce(header_lines, %{}, fn header, parsed_headers ->
       split_string = String.split(header, ": ")
       [key, value] = split_string
-      header = Map.put(parsed_headers, key, value)
+      _header = Map.put(parsed_headers, key, value)
     end)
   end
 
