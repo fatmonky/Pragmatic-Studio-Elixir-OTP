@@ -1,0 +1,11 @@
+defmodule ParserTest do
+  use ExUnit.Case
+  doctest Servy.Parser
+  alias Servy.Parser
+
+  test "parses list of headers into map of header lines" do
+    list_headers = ["A: 1", "B: 2"]
+    expected = %{"A" => "1", "B" => "2"}
+    assert Parser.parse_headers(list_headers) == expected
+  end
+end
