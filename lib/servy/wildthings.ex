@@ -18,7 +18,7 @@ defmodule Servy.Wildthings do
       {:error, reason} ->
         # return reason for error
         IO.inspect("File error: #{reason} when reading #{filepath}")
-        "[]"
+        "{\"bears\": []}"
     end
   end
 

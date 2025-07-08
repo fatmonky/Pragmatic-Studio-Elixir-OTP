@@ -59,6 +59,15 @@ defmodule Servy.Handler do
     |> handle_file(conv)
   end
 
+  def route(%Conv{method: "GET", path: "/pages/" <> name} = conv) do
+    @pages_path
+    |> Path.join("#{name}.md")
+    |> File.read()
+    |> handle_file(conv)
+    # model answer: declare markdown_to_html function, instead of calling Earmark.as_html directly
+    |> Earmark.as_html!()
+  end
+
   # function clause approach
   def route(%Conv{method: "GET", path: "/bears/new"} = conv) do
     @pages_path
