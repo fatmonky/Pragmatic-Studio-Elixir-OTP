@@ -21,6 +21,7 @@ defmodule Servy.Handler do
     |> route
     |> track
     # |> emojify
+    |> put_content_length
     |> format_response
   end
 
@@ -37,6 +38,11 @@ defmodule Servy.Handler do
   end
 
   def emojify(%Conv{} = conv), do: conv
+
+  def put_content_length(conv) do
+    content_length = byte_size(conv.resp_body)
+    %{conv | resp_headers: Map.put(conv.resp_headers, "Content-Length", content_length)}
+  end
 
   def route(%Conv{method: "GET", path: "/wildthings"} = conv) do
     %{
@@ -91,7 +97,7 @@ defmodule Servy.Handler do
     """
     HTTP/1.1 #{Conv.full_status(conv)}\r
     Content-Type: #{conv.resp_headers["Content-Type"]}\r
-    Content-Length: #{byte_size(conv.resp_body)}\r
+    Content-Length: #{conv.resp_headers["Content-Length"]}\r
     \r
     #{conv.resp_body}
     """

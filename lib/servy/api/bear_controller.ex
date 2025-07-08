@@ -7,6 +7,6 @@ defmodule Servy.Api.BearController do
 
   def put_resp_content_type(conv, content_type) do
     new_headers = Map.put(conv.resp_headers, "Content-Type", content_type)
-    conv = %{conv | resp_headers: new_headers}
+    %{conv | resp_headers: new_headers}
   end
 end
