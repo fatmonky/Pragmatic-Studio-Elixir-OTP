@@ -64,16 +64,10 @@ defmodule Servy.Handler do
     |> Path.join("#{name}.md")
     |> File.read()
     |> handle_file(conv)
-    |> markdown_to_html(conv)
+    |> markdown_to_html
 
     # model answer: declare markdown_to_html function, instead of calling Earmark.as_html directly
   end
-
-  def markdown_to_html(%Conv{status: 200} = conv) do
-    %{conv | resp_body: Earmark.as_html!(conv.resp_body)}
-  end
-
-  def markdown_to_html(%Conv{} = conv), do: conv
 
   # function clause approach
   def route(%Conv{method: "GET", path: "/bears/new"} = conv) do
@@ -113,6 +107,12 @@ defmodule Servy.Handler do
   def route(%Conv{path: path} = conv) do
     %{conv | status: 404, resp_body: "No #{path} found!"}
   end
+
+  def markdown_to_html(%Conv{status: 200} = conv) do
+    %{conv | resp_body: Earmark.as_html!(conv.resp_body)}
+  end
+
+  def markdown_to_html(%Conv{} = conv), do: conv
 
   def format_response(%Conv{} = conv) do
     """
