@@ -17,7 +17,7 @@ defmodule Servy.Handler do
     request
     |> parse
     |> rewrite_path
-    |> log
+    # |> log
     |> route
     |> track
     # |> emojify
@@ -42,6 +42,16 @@ defmodule Servy.Handler do
   def put_content_length(conv) do
     content_length = byte_size(conv.resp_body)
     %{conv | resp_headers: Map.put(conv.resp_headers, "Content-Length", content_length)}
+  end
+
+  def route(%Conv{method: "GET", path: "/hibernate/" <> time} = conv) do
+    time |> String.to_integer() |> :timer.sleep()
+
+    %{conv | status: 200, resp_body: "Awake!"}
+  end
+
+  def route(%Conv{method: "GET", path: "/kaboom"} = conv) do
+    raise "Kaboom!"
   end
 
   def route(%Conv{method: "GET", path: "/wildthings"} = conv) do
