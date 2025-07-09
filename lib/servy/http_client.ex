@@ -1,24 +1,24 @@
 defmodule Servy.HttpClient do
-  def client(port) do
+  def client(port, request) do
     # to make it runnable on one machine
     someHostInNet = 'localhost'
     {:ok, sock} = :gen_tcp.connect(someHostInNet, port, [:binary, packet: :raw, active: false])
-
-    request = """
-    GET /bears HTTP/1.1\r
-    Host: example.com\r
-    User-Agent: ExampleBrowser/1.0\r
-    Accept: */*\r
-    \r
-    """
-
     :ok = :gen_tcp.send(sock, request)
-    {:ok, request} = :gen_tcp.recv(sock, 0)
-    IO.puts("➡️  Received request: \n")
-    IO.puts(request)
+    {:ok, response} = :gen_tcp.recv(sock, 0)
+    IO.puts("➡️  Received response: \n")
+    IO.puts(response)
     :ok = :gen_tcp.close(sock)
+    response
   end
 end
+
+# request = """
+# GET /bears HTTP/1.1\r
+# Host: example.com\r
+# User-Agent: ExampleBrowser/1.0\r
+# Accept: */*\r
+# \r
+# """
 
 # model answer:
 # defmodule Servy.HttpClient do
