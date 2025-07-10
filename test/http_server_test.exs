@@ -27,24 +27,43 @@ defmodule Servy.HttpServerTest do
            """
   end
 
-  test "GET /wildthings with HTTPoison" do
+  test "GET /bears with HTTPoison" do
+    server = spawn(fn -> HttpServer.start(4000) end)
     parent = self()
-    spawn(fn -> send(parent, {:result, HTTPoison.get("http://localhost:4000/wildthings")}) end)
 
-    expected_response = """
-           HTTP/1.1 200 OK\r
-           Content-Type: text/html\r
-           Content-Length: 28\r
-           \r
-           Bears, Lions, Tigers, Tapirs
-    """
+    for _ <- 1..5 do
+      spawn(fn ->
+        {:ok, response} = HTTPoison.get("http://localhost:4000/bears")
+        send(parent, {:result, response})
+      end)
+    end
 
-    received_response1 =
-      receive do
-        {:result, animallists} -> animallists
-      end
+    for _ <- 1..5 do
+      expected_response = """
+      <h1>All The Bears!</h1>
 
-    assert remove_whitespace(received_response1.body) == remove_whitespace(expected_response)
+      <ul>
+        <li>Brutus - Grizzly</li>
+        <li>Iceman - Polar</li>
+        <li>Kenai - Grizzly</li>
+        <li>Paddington - Brown</li>
+        <li>Roscoe - Panda</li>
+        <li>Rosie - Black</li>
+        <li>Scarface - Grizzly</li>
+        <li>Smokey - Black</li>
+        <li>Snow - Polar</li>
+        <li>Teddy - Brown</li>
+      </ul>
+      """
+
+      received_response1 =
+        receive do
+          {:result, bearlist} -> bearlist
+        end
+
+      assert received_response1.status_code == 200
+      assert remove_whitespace(received_response1.body) == remove_whitespace(expected_response)
+    end
   end
 
   # model answer
