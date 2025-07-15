@@ -26,6 +26,16 @@ defmodule Servy.Handler do
     |> format_response
   end
 
+  @doc """
+  adds emoji to %Conv{resp_body} based on conv.status.
+  ## Examples
+  #iex >  test_struct = %Conv{status: 200, resp_body: "hello!"}
+  iex > Servy.Handler.emojify(test_struct)
+  %Conv{status:200, resp_body: "😃" <>"\n"<>"hello!"<>"\n"<>"😃"}
+  iex > test_struct2 = %Conv{status: 403, resp_body: "world!"}
+  iex > Servy.Handler.emojify(test_struct2)
+  %Conv{status:403, resp_Body: "🤬"<>"\n"<>"world!"<>"\n"<>"🤬"}
+  """
   def emojify(%Conv{status: 200} = conv) do
     emojies = "😃"
     emojified_resp_body = emojies <> "\n" <> conv.resp_body <> "\n" <> emojies

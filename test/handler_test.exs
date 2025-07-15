@@ -1,7 +1,10 @@
 defmodule HandlerTest do
   use ExUnit.Case
 
-  import Servy.Handler, only: [handler: 1]
+  # import Servy.Handler, only: [handler: 1]
+
+  import Servy.Handler, only: :functions
+  doctest Servy.Handler
 
   test "GET /wildthings" do
     request = """
