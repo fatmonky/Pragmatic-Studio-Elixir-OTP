@@ -60,21 +60,25 @@ defmodule Servy.Handler do
     parent = self()
 
     # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-1")}) end)
+    # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-2")}) end)
+    # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-3")}) end)
     Servy.Fetcher.async("cam-1")
-    spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-2")}) end)
-    spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-3")}) end)
+    Servy.Fetcher.async("cam-2")
+    Servy.Fetcher.async("cam-3")
 
     snapshot1 = Servy.Fetcher.get_result()
+    snapshot2 = Servy.Fetcher.get_result()
+    snapshot3 = Servy.Fetcher.get_result()
 
-    snapshot2 =
-      receive do
-        {:result, filename} -> filename
-      end
+    # snapshot2 =
+    #   receive do
+    #     {:result, filename} -> filename
+    #   end
 
-    snapshot3 =
-      receive do
-        {:result, filename} -> filename
-      end
+    # snapshot3 =
+    #   receive do
+    #     {:result, filename} -> filename
+    #   end
 
     snapshots = [snapshot1, snapshot2, snapshot3]
 
