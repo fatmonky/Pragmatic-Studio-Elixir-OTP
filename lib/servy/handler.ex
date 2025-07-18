@@ -59,14 +59,12 @@ defmodule Servy.Handler do
     # the request handling process
     parent = self()
 
-    spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-1")}) end)
+    # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-1")}) end)
+    Servy.Fetcher.async("cam-1")
     spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-2")}) end)
     spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-3")}) end)
 
-    snapshot1 =
-      receive do
-        {:result, filename} -> filename
-      end
+    snapshot1 = Servy.Fetcher.get_result()
 
     snapshot2 =
       receive do
