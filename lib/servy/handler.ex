@@ -64,12 +64,17 @@ defmodule Servy.Handler do
     # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-2")}) end)
     # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-3")}) end)
     snapshots =
-      [
-        Fetcher.async(fn -> VideoCam.get_snapshot("cam-1") end),
-        Fetcher.async(fn -> VideoCam.get_snapshot("cam-2") end),
-        Fetcher.async(fn -> VideoCam.get_snapshot("cam-3") end)
-      ]
+      ["cam-1", "cam-2", "cam-3"]
+      |> Enum.map(&VideoCam.get_snapshot/1)
+      |> Enum.map(&Fetcher.async(fn -> &1 end))
       |> Enum.map(&Fetcher.get_result/1)
+
+    # [
+    #   Fetcher.async(fn -> VideoCam.get_snapshot("cam-1") end),
+    #   Fetcher.async(fn -> VideoCam.get_snapshot("cam-2") end),
+    #   Fetcher.async(fn -> VideoCam.get_snapshot("cam-3") end)
+    # ]
+    # |> Enum.map(&Fetcher.get_result/1)
 
     pid4 = Fetcher.async(fn -> Servy.Tracker.get_location("bigfoot") end)
     # Fetcher.async("cam-2")
