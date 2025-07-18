@@ -8,7 +8,6 @@ defmodule Servy.Handler do
   alias Servy.Conv
   alias Servy.BearController
   alias Servy.VideoCam
-  alias Servy.Fetcher
 
   import Servy.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
   import Servy.Parser, only: [parse: 1]
@@ -63,13 +62,13 @@ defmodule Servy.Handler do
     # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-1")}) end)
     # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-2")}) end)
     # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-3")}) end)
-    pid4 = Fetcher.async(fn -> Servy.Tracker.get_location("bigfoot") end)
+    task = Task.async(fn -> Servy.Tracker.get_location("bigfoot") end)
 
     snapshots =
       ["cam-1", "cam-2", "cam-3"]
       |> Enum.map(&VideoCam.get_snapshot/1)
-      |> Enum.map(&Fetcher.async(fn -> &1 end))
-      |> Enum.map(&Fetcher.get_result/1)
+      |> Enum.map(&Task.async(fn -> &1 end))
+      |> Enum.map(&Task.await/1)
 
     # [
     #   Fetcher.async(fn -> VideoCam.get_snapshot("cam-1") end),
@@ -84,7 +83,7 @@ defmodule Servy.Handler do
     # snapshot1 = Fetcher.get_result(pid1)
     # snapshot2 = Fetcher.get_result(pid2)
     # snapshot3 = Fetcher.get_result(pid3)
-    where_is_bigfoot = Fetcher.get_result(pid4)
+    where_is_bigfoot = Task.await(task)
 
     # snapshot2 =
     #   receive do
