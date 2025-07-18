@@ -8,6 +8,7 @@ defmodule Servy.Handler do
   alias Servy.Conv
   alias Servy.BearController
   alias Servy.VideoCam
+  alias Servy.Fetcher
 
   import Servy.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
   import Servy.Parser, only: [parse: 1]
@@ -62,13 +63,15 @@ defmodule Servy.Handler do
     # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-1")}) end)
     # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-2")}) end)
     # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-3")}) end)
-    Servy.Fetcher.async("cam-1")
-    Servy.Fetcher.async("cam-2")
-    Servy.Fetcher.async("cam-3")
+    Fetcher.async(fn -> VideoCam.get_snapshot("cam-1") end)
+    Fetcher.async(fn -> VideoCam.get_snapshot("cam-2") end)
+    Fetcher.async(fn -> VideoCam.get_snapshot("cam-3") end)
+    # Fetcher.async("cam-2")
+    # Fetcher.async("cam-3")
 
-    snapshot1 = Servy.Fetcher.get_result()
-    snapshot2 = Servy.Fetcher.get_result()
-    snapshot3 = Servy.Fetcher.get_result()
+    snapshot1 = Fetcher.get_result()
+    snapshot2 = Fetcher.get_result()
+    snapshot3 = Fetcher.get_result()
 
     # snapshot2 =
     #   receive do
