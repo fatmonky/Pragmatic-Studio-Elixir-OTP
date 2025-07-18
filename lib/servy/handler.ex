@@ -59,9 +59,6 @@ defmodule Servy.Handler do
     # the request handling process
     parent = self()
 
-    # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-1")}) end)
-    # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-2")}) end)
-    # spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-3")}) end)
     task = Task.async(fn -> Servy.Tracker.get_location("bigfoot") end)
 
     snapshots =
@@ -70,30 +67,7 @@ defmodule Servy.Handler do
       |> Enum.map(&Task.async(fn -> &1 end))
       |> Enum.map(&Task.await/1)
 
-    # [
-    #   Fetcher.async(fn -> VideoCam.get_snapshot("cam-1") end),
-    #   Fetcher.async(fn -> VideoCam.get_snapshot("cam-2") end),
-    #   Fetcher.async(fn -> VideoCam.get_snapshot("cam-3") end)
-    # ]
-    # |> Enum.map(&Fetcher.get_result/1)
-
-    # Fetcher.async("cam-2")
-    # Fetcher.async("cam-3")
-
-    # snapshot1 = Fetcher.get_result(pid1)
-    # snapshot2 = Fetcher.get_result(pid2)
-    # snapshot3 = Fetcher.get_result(pid3)
     where_is_bigfoot = Task.await(task)
-
-    # snapshot2 =
-    #   receive do
-    #     {:result, filename} -> filename
-    #   end
-
-    # snapshot3 =
-    #   receive do
-    #     {:result, filename} -> filename
-    #   end
 
     %{conv | status: 200, resp_body: inspect({snapshots, where_is_bigfoot})}
   end
