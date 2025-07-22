@@ -70,7 +70,8 @@ defmodule Servy.Handler do
 
     where_is_bigfoot = Task.await(task)
 
-    %{conv | status: 200, resp_body: inspect({snapshots, where_is_bigfoot})}
+    content = View.render(conv, "sensors.eex", sensors: snapshots, bigfoot: where_is_bigfoot)
+    %{conv | status: 200, resp_body: content}
   end
 
   def route(%Conv{method: "GET", path: "/hibernate/" <> time} = conv) do
