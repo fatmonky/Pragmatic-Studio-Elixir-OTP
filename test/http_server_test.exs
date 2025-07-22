@@ -31,35 +31,63 @@ defmodule Servy.HttpServerTest do
     server = spawn(fn -> HttpServer.start(4000) end)
     parent = self()
 
-    for _ <- 1..5 do
-      spawn(fn ->
-        {:ok, response} = HTTPoison.get("http://localhost:4000/bears")
-        send(parent, {:result, response})
-      end)
-    end
+    # for _ <- 1..5 do
+    #   spawn(fn ->
+    #     {:ok, response} = HTTPoison.get("http://localhost:4000/bears")
+    #     send(parent, {:result, response})
+    #   end)
+    # end
+    # for _ <- 1..5 do
+    #       expected_response = """
+    #       <h1>All The Bears!</h1>
 
-    for _ <- 1..5 do
-      expected_response = """
-      <h1>All The Bears!</h1>
+    #       <ul>
+    #         <li>Brutus - Grizzly</li>
+    #         <li>Iceman - Polar</li>
+    #         <li>Kenai - Grizzly</li>
+    #         <li>Paddington - Brown</li>
+    #         <li>Roscoe - Panda</li>
+    #         <li>Rosie - Black</li>
+    #         <li>Scarface - Grizzly</li>
+    #         <li>Smokey - Black</li>
+    #         <li>Snow - Polar</li>
+    #         <li>Teddy - Brown</li>
+    #       </ul>
+    #       """
 
-      <ul>
-        <li>Brutus - Grizzly</li>
-        <li>Iceman - Polar</li>
-        <li>Kenai - Grizzly</li>
-        <li>Paddington - Brown</li>
-        <li>Roscoe - Panda</li>
-        <li>Rosie - Black</li>
-        <li>Scarface - Grizzly</li>
-        <li>Smokey - Black</li>
-        <li>Snow - Polar</li>
-        <li>Teddy - Brown</li>
-      </ul>
-      """
+    #       received_response1 =
+    #         receive do
+    #           {:result, bearlist} -> bearlist
+    #         end
 
-      received_response1 =
-        receive do
-          {:result, bearlist} -> bearlist
-        end
+    # ch 23 Ex using Tasks
+    expected_response = """
+    <h1>All The Bears!</h1>
+
+    <ul>
+      <li>Brutus - Grizzly</li>
+      <li>Iceman - Polar</li>
+      <li>Kenai - Grizzly</li>
+      <li>Paddington - Brown</li>
+      <li>Roscoe - Panda</li>
+      <li>Rosie - Black</li>
+      <li>Scarface - Grizzly</li>
+      <li>Smokey - Black</li>
+      <li>Snow - Polar</li>
+      <li>Teddy - Brown</li>
+    </ul>
+    """
+
+    tasks =
+      for _ <- 1..5 do
+        Task.async(fn ->
+          {:ok, response} = HTTPoison.get("http://localhost:4000/bears")
+          response
+        end)
+      end
+
+    for task <- tasks do
+      received_response1 = Task.await(task)
 
       assert received_response1.status_code == 200
       assert remove_whitespace(received_response1.body) == remove_whitespace(expected_response)
