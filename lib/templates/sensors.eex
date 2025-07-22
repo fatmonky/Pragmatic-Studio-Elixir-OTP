@@ -1,0 +1,10 @@
+<h1>All The Wildthings!</h1>
+
+<ul>  <%= for sensor <- sensors do %>
+  <li><%=  %> - <%= sensor.snapshot %></li>
+    <% end %>
+<%= for bigfoot <- bigfoots do %>
+  <li> Latitude: <%= bigfoot.lat %></li>
+  <li> Longitude: <%= bigfoot.lng %></li>
+    <% end %>
+</ul>
