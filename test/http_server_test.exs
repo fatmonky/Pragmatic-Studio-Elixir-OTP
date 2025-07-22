@@ -104,6 +104,29 @@ defmodule Servy.HttpServerTest do
   #   assert response.body == "Bears, Lions, Tigers"
   # end
 
+  test "sanity check for multiple pages on site" do
+    server = spawn(fn -> HttpServer.start(4000) end)
+    parent = self()
+
+    check_pages =
+      for page <- [
+            "/wildthings",
+            "/bears",
+            "/api/bears",
+            "/about"
+          ] do
+        Task.async(fn ->
+          {:ok, response} = HTTPoison.get("http://localhost:4000#{page}")
+          response
+        end)
+      end
+
+    for task <- check_pages do
+      response = Task.await(task)
+      assert response.status_code == 200
+    end
+  end
+
   defp remove_whitespace(text) do
     String.replace(text, ~r{\s}, "")
   end
