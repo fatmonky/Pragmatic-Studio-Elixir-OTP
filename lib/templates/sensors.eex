@@ -1,0 +1,8 @@
+<h1>All The Wildthings!</h1>
+
+<ul>  <%= for sensor <- sensors do %>
+  <li><img src="<%= sensor %>" alt="snapshot"></li>
+    <% end %>
+    <h2>Where is bigfoot?</h2>
+  <li> <%= inspect bigfoot %></li>
+</ul>

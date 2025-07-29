@@ -8,6 +8,7 @@ defmodule Servy.Handler do
   alias Servy.Conv
   alias Servy.BearController
   alias Servy.VideoCam
+  alias Servy.View
 
   import Servy.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
   import Servy.Parser, only: [parse: 1]
@@ -77,7 +78,8 @@ defmodule Servy.Handler do
 
     where_is_bigfoot = Task.await(task)
 
-    %{conv | status: 200, resp_body: inspect({snapshots, where_is_bigfoot})}
+    content = View.render(conv, "sensors.eex", sensors: snapshots, bigfoot: where_is_bigfoot)
+    %{conv | status: 200, resp_body: content}
   end
 
   def route(%Conv{method: "GET", path: "/hibernate/" <> time} = conv) do
