@@ -10,6 +10,8 @@ defmodule Servy.Handler do
   alias Servy.VideoCam
   alias Servy.View
 
+  alias Servy.FourOhFourCounter, as: Counter
+
   import Servy.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
   import Servy.Parser, only: [parse: 1]
   import Servy.FileHandler, only: [handle_file: 2, handle_form: 2]
@@ -98,6 +100,12 @@ defmodule Servy.Handler do
       | status: 200,
         resp_body: "Bears, Lions, Tigers, Tapirs"
     }
+  end
+
+  # exercise on 404 counter
+  def route(%Conv{method: "GET", path: "/404s"} = conv) do
+    counts = Counter.get_counts()
+    %{conv | resp_body: inspect(counts)}
   end
 
   def route(%Conv{method: "GET", path: "/about"} = conv) do

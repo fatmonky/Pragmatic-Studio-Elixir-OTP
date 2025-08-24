@@ -29,10 +29,10 @@ defmodule Servy.FourOhFourCounter do
       unexpected ->
         IO.puts("received unexpected stuff in messages! #{unexpected}")
         listen_loop(state)
-    after
-      4000 ->
-        IO.puts("waited 4 eternities, still nothing happened... timeout")
-        listen_loop(state)
+        # after
+        #   4000 ->
+        #     IO.puts("waited 4 eternities, still nothing happened... timeout")
+        # listen_loop(state)
     end
   end
 
