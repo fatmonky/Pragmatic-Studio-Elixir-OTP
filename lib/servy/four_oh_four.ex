@@ -18,11 +18,11 @@ defmodule Servy.FourOhFourCounter do
 
       {pid, :get_count, pathname} ->
         count = Map.get(state, pathname)
-        send(pid, state.pathname)
+        send(pid, {self(), count})
         listen_loop(state)
 
       {pid, :get_counts} ->
-        send(pid, state)
+        send(pid, {self(), state})
         listen_loop(state)
 
       unexpected ->
@@ -43,12 +43,16 @@ defmodule Servy.FourOhFourCounter do
     send(:listen_loop, {pid, :get_count, pathname})
 
     receive do
-      count -> count
+      {:listen_loop, count} -> count
     end
   end
 
   def get_counts() do
     pid = self()
     send(:listen_loop, {pid, :get_counts})
+
+    receive do
+      {:listen_loop, state} -> state
+    end
   end
 end
