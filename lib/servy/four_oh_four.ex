@@ -2,11 +2,12 @@ defmodule Servy.FourOhFourCounter do
   # Server Processes: start & get_counts
   def start() do
     # start server process
-    listen_loop()
+    pid = spawn(fn -> listen_loop() end)
+    Process.register(pid, :listen_loop)
+    pid
   end
 
   def listen_loop(state \\ %{}) do
-    Process.register(self(), :listen_loop)
     # initialize cache in loop
 
     # receive-do for incoming message
@@ -18,18 +19,20 @@ defmodule Servy.FourOhFourCounter do
 
       {pid, :get_count, pathname} ->
         count = Map.get(state, pathname)
-        send(pid, {self(), count})
+        send(pid, {:listen_loop, count})
         listen_loop(state)
 
       {pid, :get_counts} ->
-        send(pid, {self(), state})
+        send(pid, {:listen_loop, state})
         listen_loop(state)
 
       unexpected ->
         IO.puts("received unexpected stuff in messages! #{unexpected}")
+        listen_loop(state)
     after
       4000 ->
         IO.puts("waited 4 eternities, still nothing happened... timeout")
+        listen_loop(state)
     end
   end
 
@@ -44,6 +47,8 @@ defmodule Servy.FourOhFourCounter do
 
     receive do
       {:listen_loop, count} -> count
+    after
+      3000 -> IO.puts("couldn't get count")
     end
   end
 
@@ -53,6 +58,8 @@ defmodule Servy.FourOhFourCounter do
 
     receive do
       {:listen_loop, state} -> state
+    after
+      3000 -> IO.puts("couldn't get counts")
     end
   end
 end
