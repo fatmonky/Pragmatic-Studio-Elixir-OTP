@@ -12,31 +12,43 @@ defmodule Servy.FourOhFourCounter do
     # receive-do for incoming message
     receive do
       # case 1: path string sent, and pattern matched to state
-      {:count, _pathname, count} ->
-        new_state = %{state | pathname: count + 1}
+      {:count, pathname} ->
+        new_state = Map.update(state, pathname, 1, &(&1 + 1))
         listen_loop(new_state)
 
-      {^pid, :get_count, pathname} ->
+      {pid, :get_count, pathname} ->
+        count = Map.get(state, pathname)
         send(pid, state.pathname)
         listen_loop(state)
 
-      {:get_counts} ->
+      {pid, :get_counts} ->
         send(pid, state)
         listen_loop(state)
+
+      unexpected ->
+        IO.puts("received unexpected stuff in messages! #{unexpected}")
+    after
+      4000 ->
+        IO.puts("waited 4 eternities, still nothing happened... timeout")
     end
   end
 
   # Client processes should be bump-count & get_count
   def bump_count(pathname) do
-    send(:listen_loop, {:count, pathname, 1})
+    send(:listen_loop, {:count, pathname})
   end
 
   def get_count(pathname) do
     pid = self()
     send(:listen_loop, {pid, :get_count, pathname})
+
+    receive do
+      count -> count
+    end
   end
 
   def get_counts() do
-    send(:listen_loop, {:get_counts})
+    pid = self()
+    send(:listen_loop, {pid, :get_counts})
   end
 end
