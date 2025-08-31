@@ -32,7 +32,7 @@ defmodule Servy.PledgeServer do
   # Server
   def listen_loop(cache) do
     receive do
-      {sender, message} ->
+      {sender, message} when is_pid(sender) ->
         {cache, response} = handle_call(message, cache)
         send(sender, {:response, response})
         listen_loop(cache)
@@ -43,20 +43,38 @@ defmodule Servy.PledgeServer do
     end
   end
 
-  def handle_call(:total_pledged, cache) do
-    total = Enum.map(cache, &elem(&1, 1)) |> Enum.sum()
-    {cache, total}
-  end
+  # def handle_call(:total_pledged, cache) do
+  #   total = Enum.map(cache, &elem(&1, 1)) |> Enum.sum()
+  #   {cache, total}
+  # end
 
-  def handle_call(:recent_pledges, cache) do
-    {cache, cache}
-  end
+  # def handle_call(:recent_pledges, cache) do
+  #   {cache, cache}
+  # end
 
-  def handle_call({:create_pledge, name, amount}, cache) do
-    {:ok, id} = send_pledge_to_service(name, amount)
-    most_recent_pledges = Enum.take(cache, 2)
-    new_state = [{name, amount} | most_recent_pledges]
-    {new_state, id}
+  # def handle_call({:create_pledge, name, amount}, cache) do
+  #   {:ok, id} = send_pledge_to_service(name, amount)
+  #   most_recent_pledges = Enum.take(cache, 2)
+  #   new_state = [{name, amount} | most_recent_pledges]
+  #   {new_state, id}
+  # end
+
+  # own experiment with using case: this seems cleaner to me than function clauses...
+  def handle_call(message, cache) do
+    case {message, cache} do
+      {:total_pledged, cache} ->
+        total = Enum.map(cache, &elem(&1, 1)) |> Enum.sum()
+        {cache, total}
+
+      {:recent_pledges, cache} ->
+        {cache, cache}
+
+      {{:create_pledge, name, amount}, cache} ->
+        {:ok, id} = send_pledge_to_service(name, amount)
+        most_recent_pledges = Enum.take(cache, 2)
+        new_state = [{name, amount} | most_recent_pledges]
+        {new_state, id}
+    end
   end
 
   defp send_pledge_to_service(_name, _amount) do
@@ -69,7 +87,7 @@ alias Servy.PledgeServer
 
 pid = PledgeServer.start()
 
-# send(pid, {:stop, "help!"})
+send(pid, {:stop, "help!"})
 
 IO.inspect(PledgeServer.create_pledge("larry", 10))
 IO.inspect(PledgeServer.create_pledge("moe", 20))
