@@ -17,8 +17,12 @@ defmodule Servy.FourOhFourCounter do
   def listen_loop(state \\ %{}) do
     # receive-do for incoming message
     receive do
-      {:count, pathname} ->
+      {:cast, {:count, pathname}} ->
         new_state = Map.update(state, pathname, 1, &(&1 + 1))
+        listen_loop(new_state)
+
+      {:cast, :clear} ->
+        new_state = handle_cast(:clear)
         listen_loop(new_state)
 
       {pid, :get_count, pathname} ->
@@ -29,10 +33,6 @@ defmodule Servy.FourOhFourCounter do
       {pid, :get_counts} ->
         send(pid, {:listen_loop, state})
         listen_loop(state)
-
-      {pid, :clear} when is_pid(pid) ->
-        new_state = %{}
-        listen_loop(new_state)
 
       unexpected ->
         IO.puts("received unexpected stuff in messages! #{unexpected}")
@@ -46,7 +46,7 @@ defmodule Servy.FourOhFourCounter do
 
   # Client processes should be bump-count & get_count
   def bump_count(pathname) do
-    send(:listen_loop, {:count, pathname})
+    cast({:count, pathname})
   end
 
   def get_count(pathname) do
@@ -72,9 +72,31 @@ defmodule Servy.FourOhFourCounter do
   end
 
   def clear() do
-    pid = self()
-    send(:listen_loop, {pid, :clear})
+    cast(:clear)
   end
 
   # Helpers
+
+  def call() do
+  end
+
+  def cast(message) do
+    send(:listen_loop, {:cast, message})
+  end
+
+  def handle_cast(:clear) do
+    %{}
+  end
+
+  # def handle_cast(:count, pathname, state) do
+  #   new_state = Map.update(state, pathname, 1, &(&1 + 1))
+  #   new_state
+  # end
+
+  # def handle_call(message) do
+  #   case message do
+  #     {:cast, :count, pathname} ->
+  #       new_state = Map.update(state, pathname, 1, &(&1 + 1))
+  #   end
+  # end
 end
