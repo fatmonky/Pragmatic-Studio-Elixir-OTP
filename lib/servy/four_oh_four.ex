@@ -26,9 +26,7 @@ defmodule Servy.FourOhFourCounter do
         listen_loop(new_state)
 
       {:call, {pid, :get_count, pathname}} ->
-        # new_state = handle_call({pid, :get_count, pathname}, state)
-        count = Map.get(state, pathname)
-        send(pid, {:listen_loop, count})
+        new_state = handle_call({pid, :get_count, pathname}, state)
         listen_loop(state)
 
       {:call, {pid, :get_counts}} ->
