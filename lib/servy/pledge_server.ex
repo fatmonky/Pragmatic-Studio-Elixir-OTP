@@ -1,30 +1,4 @@
-defmodule Servy.PledgeServer do
-  @name :pledge_server
-
-  # Client processes
-  def start do
-    IO.puts("starting pledge server...")
-    pid = spawn(__MODULE__, :listen_loop, [[]])
-    Process.register(pid, :pledge_server)
-    pid
-  end
-
-  def create_pledge(name, amount) do
-    call(@name, {:create_pledge, name, amount})
-  end
-
-  def recent_pledges() do
-    call(@name, :recent_pledges)
-  end
-
-  def total_pledges() do
-    call(@name, :total_pledged)
-  end
-
-  def clear do
-    cast(@name, :clear)
-  end
-
+defmodule Servy.GenericServer do
   # Helper
   def call(pid, message) do
     send(pid, {:call, self(), message})
@@ -36,6 +10,36 @@ defmodule Servy.PledgeServer do
 
   def cast(pid, message) do
     send(pid, {:cast, message})
+  end
+end
+
+defmodule Servy.PledgeServer do
+  @name :pledge_server
+
+  alias Servy.GenericServer
+
+  # Client processes
+  def start do
+    IO.puts("starting pledge server...")
+    pid = spawn(__MODULE__, :listen_loop, [[]])
+    Process.register(pid, :pledge_server)
+    pid
+  end
+
+  def create_pledge(name, amount) do
+    GenericServer.call(@name, {:create_pledge, name, amount})
+  end
+
+  def recent_pledges() do
+    GenericServer.call(@name, :recent_pledges)
+  end
+
+  def total_pledges() do
+    GenericServer.call(@name, :total_pledged)
+  end
+
+  def clear do
+    GenericServer.cast(@name, :clear)
   end
 
   # Server
@@ -61,6 +65,7 @@ defmodule Servy.PledgeServer do
     end
   end
 
+  # multiclause pattern matching functions:
   # def handle_call(:total_pledged, cache) do
   #   total = Enum.map(cache, &elem(&1, 1)) |> Enum.sum()
   #   {cache, total}
