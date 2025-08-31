@@ -1,4 +1,10 @@
 defmodule Servy.GenericServer do
+  def start(initial_state, name) do
+    pid = spawn(__MODULE__, :listen_loop, [initial_state])
+    Process.register(pid, name)
+    pid
+  end
+
   # Helper
   def call(pid, message) do
     send(pid, {:call, self(), message})
@@ -11,6 +17,24 @@ defmodule Servy.GenericServer do
   def cast(pid, message) do
     send(pid, {:cast, message})
   end
+
+  def listen_loop(cache) do
+    receive do
+      {:call, sender, message} when is_pid(sender) ->
+        {cache, response} = Servy.PledgeServer.handle_call(message, cache)
+        send(sender, {:response, response})
+        listen_loop(cache)
+
+      # async message clauses
+      {:cast, message} ->
+        new_state = Servy.PledgeServer.handle_cast(message, cache)
+        listen_loop(new_state)
+
+      unexpected ->
+        IO.puts("unexpected message: #{inspect(unexpected)}")
+        listen_loop(cache)
+    end
+  end
 end
 
 defmodule Servy.PledgeServer do
@@ -20,10 +44,7 @@ defmodule Servy.PledgeServer do
 
   # Client processes
   def start do
-    IO.puts("starting pledge server...")
-    pid = spawn(__MODULE__, :listen_loop, [[]])
-    Process.register(pid, :pledge_server)
-    pid
+    GenericServer.start([], @name)
   end
 
   def create_pledge(name, amount) do
@@ -43,27 +64,6 @@ defmodule Servy.PledgeServer do
   end
 
   # Server
-  def listen_loop(cache) do
-    receive do
-      {:call, sender, message} when is_pid(sender) ->
-        {cache, response} = handle_call(message, cache)
-        send(sender, {:response, response})
-        listen_loop(cache)
-
-      # async message clauses
-      {:cast, message} ->
-        new_state = handle_cast(message, cache)
-        listen_loop(new_state)
-
-      # :clear ->
-      # new_state = []
-      # listen_loop(new_state)
-
-      unexpected ->
-        IO.puts("unexpected message: #{inspect(unexpected)}")
-        listen_loop(cache)
-    end
-  end
 
   # multiclause pattern matching functions:
   # def handle_call(:total_pledged, cache) do
