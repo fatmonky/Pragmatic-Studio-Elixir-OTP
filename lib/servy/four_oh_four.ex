@@ -1,17 +1,11 @@
 defmodule Servy.GenFourOhFourCounter do
-  def start(callback_module) do
+  alias Servy.FourOhFourCounter, as: Counter
+
+  def start() do
     # start server process
-    pid = spawn(fn -> callback_module.listen_loop() end)
+    pid = spawn(fn -> listen_loop() end)
     Process.register(pid, :listen_loop)
     pid
-  end
-end
-
-defmodule Servy.FourOhFourCounter do
-  alias Servy.GenFourOhFourCounter
-  # Server Processes: start & get_counts
-  def start() do
-    GenFourOhFourCounter.start(__MODULE__)
   end
 
   def listen_loop(state \\ %{}) do
@@ -20,40 +14,24 @@ defmodule Servy.FourOhFourCounter do
       {:cast, message} ->
         case message do
           {:count, pathname} ->
-            new_state = handle_cast(:count, pathname, state)
+            new_state = Counter.handle_cast(:count, pathname, state)
             listen_loop(new_state)
 
           :clear ->
-            new_state = handle_cast(:clear)
+            new_state = Counter.handle_cast(:clear)
             listen_loop(new_state)
         end
 
       {:call, message} ->
         case message do
           {pid, :get_count, pathname} ->
-            _count = handle_call({pid, :get_count, pathname}, state)
+            _count = Counter.handle_call({pid, :get_count, pathname}, state)
             listen_loop(state)
 
           {pid, :get_counts} ->
-            new_state = handle_call({pid, :get_counts}, state)
+            new_state = Counter.handle_call({pid, :get_counts}, state)
             listen_loop(new_state)
         end
-
-      # {:cast, {:count, pathname}} ->
-      #   new_state = handle_cast(:count, pathname, state)
-      #   listen_loop(new_state)
-
-      # {:cast, :clear} ->
-      #   new_state = handle_cast(:clear)
-      #   listen_loop(new_state)
-
-      # {:call, {pid, :get_count, pathname}} ->
-      #   _count = handle_call({pid, :get_count, pathname}, state)
-      #   listen_loop(state)
-
-      # {:call, {pid, :get_counts}} ->
-      #   new_state = handle_call({pid, :get_counts}, state)
-      #   listen_loop(new_state)
 
       unexpected ->
         IO.puts("received unexpected stuff in messages! #{unexpected}")
@@ -64,27 +42,6 @@ defmodule Servy.FourOhFourCounter do
         listen_loop(state)
     end
   end
-
-  # Client processes should be bump-count & get_count
-  def bump_count(pathname) do
-    cast({:count, pathname})
-  end
-
-  def get_count(pathname) do
-    pid = self()
-    call({pid, :get_count, pathname})
-  end
-
-  def get_counts() do
-    pid = self()
-    call({pid, :get_counts})
-  end
-
-  def clear() do
-    cast(:clear)
-  end
-
-  # Helpers
 
   def call(message) do
     send(:listen_loop, {:call, message})
@@ -99,7 +56,35 @@ defmodule Servy.FourOhFourCounter do
   def cast(message) do
     send(:listen_loop, {:cast, message})
   end
+end
 
+defmodule Servy.FourOhFourCounter do
+  alias Servy.GenFourOhFourCounter, as: GenCounter
+  # Server Processes: start & get_counts
+  def start() do
+    GenCounter.start()
+  end
+
+  # Client processes should be bump-count & get_count
+  def bump_count(pathname) do
+    GenCounter.cast({:count, pathname})
+  end
+
+  def get_count(pathname) do
+    pid = self()
+    GenCounter.call({pid, :get_count, pathname})
+  end
+
+  def get_counts() do
+    pid = self()
+    GenCounter.call({pid, :get_counts})
+  end
+
+  def clear() do
+    GenCounter.cast(:clear)
+  end
+
+  # Helpers
   def handle_cast(:clear) do
     %{}
   end
