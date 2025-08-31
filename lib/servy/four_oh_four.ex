@@ -12,26 +12,13 @@ defmodule Servy.GenFourOhFourCounter do
     # receive-do for incoming message
     receive do
       {:cast, message} ->
-        case message do
-          {:count, pathname} ->
-            new_state = Counter.handle_cast(:count, pathname, state)
-            listen_loop(new_state, callback_module)
-
-          :clear ->
-            new_state = Counter.handle_cast(:clear, state)
-            listen_loop(new_state, callback_module)
-        end
+        new_state = Counter.handle_cast(message, state)
+        listen_loop(new_state, callback_module)
 
       {:call, sender, message} ->
-        case message do
-          {:get_count, pathname} ->
-            Counter.handle_call({:get_count, pathname}, state, sender)
-            listen_loop(state, callback_module)
-
-          :get_counts ->
-            new_state = Counter.handle_call(:get_counts, state, sender)
-            listen_loop(new_state, callback_module)
-        end
+        {response, new_state} = callback_module.handle_call(message, state)
+        send(sender, {:response, response})
+        listen_loop(new_state, callback_module)
 
       unexpected ->
         IO.puts("received unexpected stuff in messages! #{unexpected}")
@@ -69,7 +56,7 @@ defmodule Servy.FourOhFourCounter do
 
   # Client processes should be bump-count & get_count
   def bump_count(pathname) do
-    GenCounter.cast(@name, {:count, pathname})
+    GenCounter.call(@name, {:count, pathname})
   end
 
   def get_count(pathname) do
@@ -89,19 +76,17 @@ defmodule Servy.FourOhFourCounter do
     %{}
   end
 
-  def handle_cast(:count, pathname, state) do
+  def handle_call({:count, pathname}, state) do
     new_state = Map.update(state, pathname, 1, &(&1 + 1))
-    new_state
+    {:ok, new_state}
   end
 
-  def handle_call({:get_count, pathname}, state, sender) do
+  def handle_call({:get_count, pathname}, state) do
     count = Map.get(state, pathname)
-    send(sender, {:response, count})
-    count
+    {count, state}
   end
 
-  def handle_call(:get_counts, state, sender) do
-    send(sender, {:response, state})
-    state
+  def handle_call(:get_counts, state) do
+    {state, state}
   end
 end
