@@ -33,7 +33,7 @@ defmodule Servy.PledgeServer do
   def listen_loop(cache) do
     receive do
       {sender, message} ->
-        response = handle_call(message, cache)
+        {cache, response} = handle_call(message, cache)
         send(sender, {:response, response})
         listen_loop(cache)
 
@@ -45,17 +45,18 @@ defmodule Servy.PledgeServer do
 
   def handle_call(:total_pledged, cache) do
     total = Enum.map(cache, &elem(&1, 1)) |> Enum.sum()
+    {cache, total}
   end
 
   def handle_call(:recent_pledges, cache) do
-    cache
+    {cache, cache}
   end
 
   def handle_call({:create_pledge, name, amount}, cache) do
     {:ok, id} = send_pledge_to_service(name, amount)
     most_recent_pledges = Enum.take(cache, 2)
     new_state = [{name, amount} | most_recent_pledges]
-    id
+    {new_state, id}
   end
 
   defp send_pledge_to_service(_name, _amount) do
