@@ -30,6 +30,10 @@ defmodule Servy.FourOhFourCounter do
         send(pid, {:listen_loop, state})
         listen_loop(state)
 
+      {pid, :clear} when is_pid(pid) ->
+        new_state = %{}
+        listen_loop(new_state)
+
       unexpected ->
         IO.puts("received unexpected stuff in messages! #{unexpected}")
         listen_loop(state)
@@ -65,6 +69,11 @@ defmodule Servy.FourOhFourCounter do
     after
       3000 -> IO.puts("couldn't get counts")
     end
+  end
+
+  def clear() do
+    pid = self()
+    send(:listen_loop, {pid, :clear})
   end
 
   # Helpers
