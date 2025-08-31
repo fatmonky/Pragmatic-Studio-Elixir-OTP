@@ -30,7 +30,7 @@ defmodule Servy.FourOhFourCounter do
         send(pid, {:listen_loop, count})
         listen_loop(state)
 
-      {pid, :get_counts} ->
+      {:call, {pid, :get_counts}} ->
         send(pid, {:listen_loop, state})
         listen_loop(state)
 
@@ -62,13 +62,8 @@ defmodule Servy.FourOhFourCounter do
 
   def get_counts() do
     pid = self()
-    send(:listen_loop, {pid, :get_counts})
-
-    receive do
-      {:listen_loop, state} -> state
-    after
-      3000 -> IO.puts("couldn't get counts")
-    end
+    state = %{}
+    call({pid, :get_counts}, state)
   end
 
   def clear() do
@@ -77,7 +72,14 @@ defmodule Servy.FourOhFourCounter do
 
   # Helpers
 
-  def call() do
+  def call(message, response) do
+    send(:listen_loop, {:call, message})
+
+    receive do
+      {:listen_loop, response} -> response
+    after
+      3000 -> IO.puts("no response from server")
+    end
   end
 
   def cast(message) do
