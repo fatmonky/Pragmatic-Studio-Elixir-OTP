@@ -18,7 +18,7 @@ defmodule Servy.FourOhFourCounter do
     # receive-do for incoming message
     receive do
       {:cast, {:count, pathname}} ->
-        new_state = Map.update(state, pathname, 1, &(&1 + 1))
+        new_state = handle_cast(:count, pathname, state)
         listen_loop(new_state)
 
       {:cast, :clear} ->
@@ -88,10 +88,10 @@ defmodule Servy.FourOhFourCounter do
     %{}
   end
 
-  # def handle_cast(:count, pathname, state) do
-  #   new_state = Map.update(state, pathname, 1, &(&1 + 1))
-  #   new_state
-  # end
+  def handle_cast(:count, pathname, state) do
+    new_state = Map.update(state, pathname, 1, &(&1 + 1))
+    new_state
+  end
 
   # def handle_call(message) do
   #   case message do
