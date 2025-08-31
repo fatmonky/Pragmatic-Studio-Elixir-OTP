@@ -25,7 +25,7 @@ defmodule Servy.FourOhFourCounter do
         new_state = handle_cast(:clear)
         listen_loop(new_state)
 
-      {pid, :get_count, pathname} ->
+      {:call, {pid, :get_count, pathname}} ->
         count = Map.get(state, pathname)
         send(pid, {:listen_loop, count})
         listen_loop(state)
@@ -51,13 +51,15 @@ defmodule Servy.FourOhFourCounter do
 
   def get_count(pathname) do
     pid = self()
-    send(:listen_loop, {pid, :get_count, pathname})
+    count = 0
+    call({pid, :get_count, pathname}, count)
+    # send(:listen_loop, {pid, :get_count, pathname})
 
-    receive do
-      {:listen_loop, count} -> count
-    after
-      3000 -> IO.puts("couldn't get count")
-    end
+    # receive do
+    #   {:listen_loop, count} -> count
+    # after
+    #   3000 -> IO.puts("couldn't get count")
+    # end
   end
 
   def get_counts() do
@@ -74,12 +76,7 @@ defmodule Servy.FourOhFourCounter do
 
   def call(message, response) do
     send(:listen_loop, {:call, message})
-
-    receive do
-      {:listen_loop, response} -> response
-    after
-      3000 -> IO.puts("no response from server")
-    end
+    handle_call(response)
   end
 
   def cast(message) do
@@ -95,10 +92,11 @@ defmodule Servy.FourOhFourCounter do
     new_state
   end
 
-  # def handle_call(message) do
-  #   case message do
-  #     {:cast, :count, pathname} ->
-  #       new_state = Map.update(state, pathname, 1, &(&1 + 1))
-  #   end
-  # end
+  def handle_call(response) do
+    receive do
+      {:listen_loop, response} -> response
+    after
+      3000 -> IO.puts("no response from server")
+    end
+  end
 end
