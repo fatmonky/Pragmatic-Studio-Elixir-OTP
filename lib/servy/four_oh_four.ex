@@ -1,19 +1,22 @@
-defmodule Servy.FourOhFourCounter do
-  # alias Servy.GenFourOhFourCounter
-  # Server Processes: start & get_counts
-  def start() do
+defmodule Servy.GenFourOhFourCounter do
+  def start(callback_module) do
     # start server process
-    pid = spawn(fn -> listen_loop() end)
+    pid = spawn(fn -> callback_module.listen_loop() end)
     Process.register(pid, :listen_loop)
     pid
   end
+end
+
+defmodule Servy.FourOhFourCounter do
+  alias Servy.GenFourOhFourCounter
+  # Server Processes: start & get_counts
+  def start() do
+    GenFourOhFourCounter.start(__MODULE__)
+  end
 
   def listen_loop(state \\ %{}) do
-    # initialize cache in loop
-
     # receive-do for incoming message
     receive do
-      # case 1: path string sent, and pattern matched to state
       {:count, pathname} ->
         new_state = Map.update(state, pathname, 1, &(&1 + 1))
         listen_loop(new_state)
@@ -30,10 +33,10 @@ defmodule Servy.FourOhFourCounter do
       unexpected ->
         IO.puts("received unexpected stuff in messages! #{unexpected}")
         listen_loop(state)
-        # after
-        #   4000 ->
-        #     IO.puts("waited 4 eternities, still nothing happened... timeout")
-        # listen_loop(state)
+    after
+      4000 ->
+        IO.puts("waited 4 eternities, still nothing happened... timeout")
+        listen_loop(state)
     end
   end
 
@@ -53,30 +56,16 @@ defmodule Servy.FourOhFourCounter do
     end
   end
 
-  def get_counts(state) do
-    pid = call({self(), :get_counts}, state)
-  end
-
-  #  pid = self()
-  #   send(:listen_loop, {pid, :get_counts})
-
-  #   receive do
-  #     {:listen_loop, state} -> state
-  #   after
-  #     3000 -> IO.puts("couldn't get counts")
-  #   end
-  # end
-
-  # Helpers
-
-  def call(message, action) do
+  def get_counts() do
     pid = self()
-    send(:listen_loop, message)
+    send(:listen_loop, {pid, :get_counts})
 
     receive do
-      {:listen_loop, action} -> action
+      {:listen_loop, state} -> state
     after
-      3000 -> IO.puts("couldn't get #{action}")
+      3000 -> IO.puts("couldn't get counts")
     end
   end
+
+  # Helpers
 end
