@@ -37,19 +37,6 @@ defmodule Servy.PledgeServer do
         send(sender, {:response, response})
         listen_loop(cache)
 
-      # {sender, {:create_pledge, name, amount}} ->
-      #   # {:ok, id} = send_pledge_to_service(name, amount)
-      #   # most_recent_pledges = Enum.take(cache, 2)
-      #   # new_state = [{name, amount} | most_recent_pledges]
-      #   # notify client process about response from server
-      #   # send(sender, {:response, id})
-      #   # recursion to listen for another message
-      #   listen_loop(new_state)
-
-      # {sender, :recent_pledges} ->
-      #   send(sender, {:response, cache})
-      #   listen_loop(cache)
-
       unexpected ->
         IO.puts("unexpected message: #{inspect(unexpected)}")
         listen_loop(cache)
@@ -58,6 +45,17 @@ defmodule Servy.PledgeServer do
 
   def handle_call(:total_pledged, cache) do
     total = Enum.map(cache, &elem(&1, 1)) |> Enum.sum()
+  end
+
+  def handle_call(:recent_pledges, cache) do
+    cache
+  end
+
+  def handle_call({:create_pledge, name, amount}, cache) do
+    {:ok, id} = send_pledge_to_service(name, amount)
+    most_recent_pledges = Enum.take(cache, 2)
+    new_state = [{name, amount} | most_recent_pledges]
+    id
   end
 
   defp send_pledge_to_service(_name, _amount) do
@@ -70,7 +68,7 @@ alias Servy.PledgeServer
 
 pid = PledgeServer.start()
 
-send(pid, {:stop, "help!"})
+# send(pid, {:stop, "help!"})
 
 IO.inspect(PledgeServer.create_pledge("larry", 10))
 IO.inspect(PledgeServer.create_pledge("moe", 20))
