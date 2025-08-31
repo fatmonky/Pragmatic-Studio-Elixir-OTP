@@ -21,21 +21,39 @@ defmodule Servy.PledgeServer do
     call(@name, :total_pledged)
   end
 
+  def clear do
+    cast(@name, :clear)
+  end
+
+  # Helper
   def call(pid, message) do
-    send(pid, {self(), message})
+    send(pid, {:call, self(), message})
 
     receive do
       {:response, response} -> response
     end
   end
 
+  def cast(pid, message) do
+    send(pid, {:cast, message})
+  end
+
   # Server
   def listen_loop(cache) do
     receive do
-      {sender, message} when is_pid(sender) ->
+      {:call, sender, message} when is_pid(sender) ->
         {cache, response} = handle_call(message, cache)
         send(sender, {:response, response})
         listen_loop(cache)
+
+      # async message clauses
+      {:cast, message} ->
+        new_state = handle_cast(message, cache)
+        listen_loop(new_state)
+
+      # :clear ->
+      # new_state = []
+      # listen_loop(new_state)
 
       unexpected ->
         IO.puts("unexpected message: #{inspect(unexpected)}")
@@ -77,6 +95,10 @@ defmodule Servy.PledgeServer do
     end
   end
 
+  def handle_cast(:clear, _cache) do
+    []
+  end
+
   defp send_pledge_to_service(_name, _amount) do
     # code to simulate sending pledge to external service
     {:ok, "pledge-#{:rand.uniform(1000)}"}
@@ -93,6 +115,9 @@ IO.inspect(PledgeServer.create_pledge("larry", 10))
 IO.inspect(PledgeServer.create_pledge("moe", 20))
 IO.inspect(PledgeServer.create_pledge("curly", 30))
 IO.inspect(PledgeServer.create_pledge("daisy", 40))
+
+PledgeServer.clear()
+
 IO.inspect(PledgeServer.create_pledge("grace", 50))
 
 IO.inspect(PledgeServer.recent_pledges())
