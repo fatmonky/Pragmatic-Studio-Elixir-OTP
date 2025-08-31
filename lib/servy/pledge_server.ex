@@ -32,27 +32,49 @@ defmodule Servy.PledgeServer do
   # Server
   def listen_loop(cache) do
     receive do
-      {sender, {:create_pledge, name, amount}} ->
-        {:ok, id} = send_pledge_to_service(name, amount)
-        most_recent_pledges = Enum.take(cache, 2)
-        new_state = [{name, amount} | most_recent_pledges]
-        # notify client process about response from server
-        send(sender, {:response, id})
-        # recursion to listen for another message
-        listen_loop(new_state)
-
-      {sender, :recent_pledges} ->
-        send(sender, {:response, cache})
+      {sender, message} ->
+        response = handle_call(message, cache)
+        send(sender, {:response, response})
         listen_loop(cache)
 
-      {sender, :total_pledged} ->
-        total = Enum.map(cache, &elem(&1, 1)) |> Enum.sum()
-        send(sender, {:response, total})
-        listen_loop(cache)
+      # {sender, {:create_pledge, name, amount}} ->
+      #   # {:ok, id} = send_pledge_to_service(name, amount)
+      #   # most_recent_pledges = Enum.take(cache, 2)
+      #   # new_state = [{name, amount} | most_recent_pledges]
+      #   # notify client process about response from server
+      #   # send(sender, {:response, id})
+      #   # recursion to listen for another message
+      #   listen_loop(new_state)
+
+      # {sender, :recent_pledges} ->
+      #   send(sender, {:response, cache})
+      #   listen_loop(cache)
+
+      # {sender, :total_pledged} ->
+      #   total = Enum.map(cache, &elem(&1, 1)) |> Enum.sum()
+      #   send(sender, {:response, total})
+      #   listen_loop(cache)
 
       unexpected ->
         IO.puts("unexpected message: #{inspect(unexpected)}")
         listen_loop(cache)
+    end
+  end
+
+  def handle_call(message, cache) do
+    case message do
+      {:create_pledge, name, amount} ->
+        {:ok, id} = send_pledge_to_service(name, amount)
+        most_recent_pledges = Enum.take(cache, 2)
+        new_state = [{name, amount} | most_recent_pledges]
+        response = id
+        response
+
+      :recent_pledges ->
+        cache
+
+      :total_pledged ->
+        total = Enum.map(cache, &elem(&1, 1)) |> Enum.sum()
     end
   end
 
