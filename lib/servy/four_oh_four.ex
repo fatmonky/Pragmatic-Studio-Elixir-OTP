@@ -17,21 +17,43 @@ defmodule Servy.FourOhFourCounter do
   def listen_loop(state \\ %{}) do
     # receive-do for incoming message
     receive do
-      {:cast, {:count, pathname}} ->
-        new_state = handle_cast(:count, pathname, state)
-        listen_loop(new_state)
+      {:cast, message} ->
+        case message do
+          {:count, pathname} ->
+            new_state = handle_cast(:count, pathname, state)
+            listen_loop(new_state)
 
-      {:cast, :clear} ->
-        new_state = handle_cast(:clear)
-        listen_loop(new_state)
+          :clear ->
+            new_state = handle_cast(:clear)
+            listen_loop(new_state)
+        end
 
-      {:call, {pid, :get_count, pathname}} ->
-        new_state = handle_call({pid, :get_count, pathname}, state)
-        listen_loop(state)
+      {:call, message} ->
+        case message do
+          {pid, :get_count, pathname} ->
+            _count = handle_call({pid, :get_count, pathname}, state)
+            listen_loop(state)
 
-      {:call, {pid, :get_counts}} ->
-        new_state = handle_call({pid, :get_counts}, state)
-        listen_loop(new_state)
+          {pid, :get_counts} ->
+            new_state = handle_call({pid, :get_counts}, state)
+            listen_loop(new_state)
+        end
+
+      # {:cast, {:count, pathname}} ->
+      #   new_state = handle_cast(:count, pathname, state)
+      #   listen_loop(new_state)
+
+      # {:cast, :clear} ->
+      #   new_state = handle_cast(:clear)
+      #   listen_loop(new_state)
+
+      # {:call, {pid, :get_count, pathname}} ->
+      #   _count = handle_call({pid, :get_count, pathname}, state)
+      #   listen_loop(state)
+
+      # {:call, {pid, :get_counts}} ->
+      #   new_state = handle_call({pid, :get_counts}, state)
+      #   listen_loop(new_state)
 
       unexpected ->
         IO.puts("received unexpected stuff in messages! #{unexpected}")
