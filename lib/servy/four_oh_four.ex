@@ -1,4 +1,5 @@
 defmodule Servy.FourOhFourCounter do
+  # alias Servy.GenFourOhFourCounter
   # Server Processes: start & get_counts
   def start() do
     # start server process
@@ -52,14 +53,30 @@ defmodule Servy.FourOhFourCounter do
     end
   end
 
-  def get_counts() do
+  def get_counts(state) do
+    pid = call({self(), :get_counts}, state)
+  end
+
+  #  pid = self()
+  #   send(:listen_loop, {pid, :get_counts})
+
+  #   receive do
+  #     {:listen_loop, state} -> state
+  #   after
+  #     3000 -> IO.puts("couldn't get counts")
+  #   end
+  # end
+
+  # Helpers
+
+  def call(message, action) do
     pid = self()
-    send(:listen_loop, {pid, :get_counts})
+    send(:listen_loop, message)
 
     receive do
-      {:listen_loop, state} -> state
+      {:listen_loop, action} -> action
     after
-      3000 -> IO.puts("couldn't get counts")
+      3000 -> IO.puts("couldn't get #{action}")
     end
   end
 end
