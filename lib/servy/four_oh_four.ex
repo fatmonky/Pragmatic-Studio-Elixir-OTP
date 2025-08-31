@@ -26,13 +26,14 @@ defmodule Servy.FourOhFourCounter do
         listen_loop(new_state)
 
       {:call, {pid, :get_count, pathname}} ->
+        # new_state = handle_call({pid, :get_count, pathname}, state)
         count = Map.get(state, pathname)
         send(pid, {:listen_loop, count})
         listen_loop(state)
 
       {:call, {pid, :get_counts}} ->
-        send(pid, {:listen_loop, state})
-        listen_loop(state)
+        new_state = handle_call({pid, :get_counts}, state)
+        listen_loop(new_state)
 
       unexpected ->
         IO.puts("received unexpected stuff in messages! #{unexpected}")
@@ -51,21 +52,12 @@ defmodule Servy.FourOhFourCounter do
 
   def get_count(pathname) do
     pid = self()
-    count = 0
-    call({pid, :get_count, pathname}, count)
-    # send(:listen_loop, {pid, :get_count, pathname})
-
-    # receive do
-    #   {:listen_loop, count} -> count
-    # after
-    #   3000 -> IO.puts("couldn't get count")
-    # end
+    call({pid, :get_count, pathname})
   end
 
   def get_counts() do
     pid = self()
-    state = %{}
-    call({pid, :get_counts}, state)
+    call({pid, :get_counts})
   end
 
   def clear() do
@@ -74,9 +66,14 @@ defmodule Servy.FourOhFourCounter do
 
   # Helpers
 
-  def call(message, response) do
+  def call(message) do
     send(:listen_loop, {:call, message})
-    handle_call(response)
+
+    receive do
+      {:listen_loop, response} -> response
+    after
+      3000 -> IO.puts("no response from server")
+    end
   end
 
   def cast(message) do
@@ -92,11 +89,14 @@ defmodule Servy.FourOhFourCounter do
     new_state
   end
 
-  def handle_call(response) do
-    receive do
-      {:listen_loop, response} -> response
-    after
-      3000 -> IO.puts("no response from server")
-    end
+  def handle_call({pid, :get_count, pathname}, state) do
+    count = Map.get(state, pathname)
+    send(pid, {:listen_loop, count})
+    count
+  end
+
+  def handle_call({pid, :get_counts}, state) do
+    send(pid, {:listen_loop, state})
+    state
   end
 end
