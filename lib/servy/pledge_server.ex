@@ -1,10 +1,14 @@
 defmodule Servy.PledgeServer do
   @name :pledge_server
 
+  defmodule State do
+    defstruct cache_size: 4, pledges: []
+  end
+
   use GenServer
   # Client processes
   def start do
-    GenServer.start(__MODULE__, [], name: @name)
+    GenServer.start(__MODULE__, %State{}, name: @name)
   end
 
   def create_pledge(name, amount) do
@@ -21,6 +25,10 @@ defmodule Servy.PledgeServer do
 
   def clear do
     GenServer.cast(@name, :clear)
+  end
+
+  def set_cache_size(size) do
+    GenServer.cast(@name, {:set_cache_size, size})
   end
 
   # Server
@@ -46,22 +54,27 @@ defmodule Servy.PledgeServer do
   def handle_call(message, _from, cache) do
     case {message, _from, cache} do
       {:total_pledged, _from, cache} ->
-        total = Enum.map(cache, &elem(&1, 1)) |> Enum.sum()
+        total = Enum.map(cache.pledges, &elem(&1, 1)) |> Enum.sum()
         {:reply, total, cache}
 
       {:recent_pledges, _from, cache} ->
-        {:reply, cache, cache}
+        {:reply, cache.pledges, cache}
 
       {{:create_pledge, name, amount}, _from, cache} ->
         {:ok, id} = send_pledge_to_service(name, amount)
-        most_recent_pledges = Enum.take(cache, 2)
-        new_state = [{name, amount} | most_recent_pledges]
+        most_recent_pledges = Enum.take(cache.pledges, cache.cache_size - 1)
+        cache_pledge = [{name, amount} | most_recent_pledges]
+        new_state = %State{cache | pledges: cache_pledge}
         {:reply, id, new_state}
     end
   end
 
-  def handle_cast(:clear, _cache) do
-    {:noreply, []}
+  def handle_cast(:clear, state) do
+    {:noreply, %{state | pledges: []}}
+  end
+
+  def handle_cast({:set_cache_size, size}, state) do
+    {:noreply, %{state | cache_size: size}}
   end
 
   defp send_pledge_to_service(_name, _amount) do
@@ -76,12 +89,13 @@ pid = PledgeServer.start()
 
 # send(pid, {:stop, "help!"})
 
+PledgeServer.set_cache_size(4)
+
 IO.inspect(PledgeServer.create_pledge("larry", 10))
+PledgeServer.clear()
 IO.inspect(PledgeServer.create_pledge("moe", 20))
 IO.inspect(PledgeServer.create_pledge("curly", 30))
 IO.inspect(PledgeServer.create_pledge("daisy", 40))
-
-# PledgeServer.clear()
 
 IO.inspect(PledgeServer.create_pledge("grace", 50))
 
