@@ -1,66 +1,26 @@
-defmodule Servy.GenericServer do
-  def start(callback_module, initial_state, name) do
-    pid = spawn(__MODULE__, :listen_loop, [initial_state, callback_module])
-    Process.register(pid, name)
-    pid
-  end
-
-  # Helper
-  def call(pid, message) do
-    send(pid, {:call, self(), message})
-
-    receive do
-      {:response, response} -> response
-    end
-  end
-
-  def cast(pid, message) do
-    send(pid, {:cast, message})
-  end
-
-  def listen_loop(cache, callback_module) do
-    receive do
-      {:call, sender, message} when is_pid(sender) ->
-        {cache, response} = callback_module.handle_call(message, cache)
-        send(sender, {:response, response})
-        listen_loop(cache, callback_module)
-
-      # async message clauses
-      {:cast, message} ->
-        new_state = callback_module.handle_cast(message, cache)
-        listen_loop(new_state, callback_module)
-
-      unexpected ->
-        IO.puts("unexpected message: #{inspect(unexpected)}")
-        listen_loop(cache, callback_module)
-    end
-  end
-end
-
 defmodule Servy.PledgeServer do
   @name :pledge_server
 
-  alias Servy.GenericServer
-
+  use GenServer
   # Client processes
   def start do
-    GenericServer.start(__MODULE__, [], @name)
+    GenServer.start(__MODULE__, [], name: @name)
   end
 
   def create_pledge(name, amount) do
-    GenericServer.call(@name, {:create_pledge, name, amount})
+    GenServer.call(@name, {:create_pledge, name, amount})
   end
 
   def recent_pledges() do
-    GenericServer.call(@name, :recent_pledges)
+    GenServer.call(@name, :recent_pledges)
   end
 
   def total_pledges() do
-    GenericServer.call(@name, :total_pledged)
+    GenServer.call(@name, :total_pledged)
   end
 
   def clear do
-    GenericServer.cast(@name, :clear)
+    GenServer.cast(@name, :clear)
   end
 
   # Server
@@ -83,25 +43,25 @@ defmodule Servy.PledgeServer do
   # end
 
   # own experiment with using case: this seems cleaner to me than function clauses...
-  def handle_call(message, cache) do
-    case {message, cache} do
-      {:total_pledged, cache} ->
+  def handle_call(message, _from, cache) do
+    case {message, _from, cache} do
+      {:total_pledged, _from, cache} ->
         total = Enum.map(cache, &elem(&1, 1)) |> Enum.sum()
-        {cache, total}
+        {:reply, total, cache}
 
-      {:recent_pledges, cache} ->
-        {cache, cache}
+      {:recent_pledges, _from, cache} ->
+        {:reply, cache, cache}
 
-      {{:create_pledge, name, amount}, cache} ->
+      {{:create_pledge, name, amount}, _from, cache} ->
         {:ok, id} = send_pledge_to_service(name, amount)
         most_recent_pledges = Enum.take(cache, 2)
         new_state = [{name, amount} | most_recent_pledges]
-        {new_state, id}
+        {:reply, id, new_state}
     end
   end
 
   def handle_cast(:clear, _cache) do
-    []
+    {:noreply, []}
   end
 
   defp send_pledge_to_service(_name, _amount) do
@@ -114,14 +74,14 @@ alias Servy.PledgeServer
 
 pid = PledgeServer.start()
 
-send(pid, {:stop, "help!"})
+# send(pid, {:stop, "help!"})
 
 IO.inspect(PledgeServer.create_pledge("larry", 10))
 IO.inspect(PledgeServer.create_pledge("moe", 20))
 IO.inspect(PledgeServer.create_pledge("curly", 30))
 IO.inspect(PledgeServer.create_pledge("daisy", 40))
 
-PledgeServer.clear()
+# PledgeServer.clear()
 
 IO.inspect(PledgeServer.create_pledge("grace", 50))
 
