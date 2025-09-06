@@ -69,6 +69,17 @@ defmodule Servy.PledgeServer do
     end
   end
 
+  def handle_info(message, state) do
+    IO.puts("can't touch this! #{inspect(message)}")
+    {:noreply, state}
+  end
+
+  def init(state) do
+    pledges = fetch_recent_pledges_from_service()
+    new_state = %{state | pledges: pledges}
+    {:ok, new_state}
+  end
+
   def handle_cast(:clear, state) do
     {:noreply, %{state | pledges: []}}
   end
@@ -81,23 +92,30 @@ defmodule Servy.PledgeServer do
     # code to simulate sending pledge to external service
     {:ok, "pledge-#{:rand.uniform(1000)}"}
   end
+
+  defp fetch_recent_pledges_from_service do
+    # CODE GOES HERE TO FETCH RECENT PLEDGES FROM EXTERNAL SERVICE
+
+    # Example return value:
+    [{"wilma", 15}, {"fred", 25}]
+  end
 end
 
 alias Servy.PledgeServer
 
-pid = PledgeServer.start()
+{:ok, pid} = PledgeServer.start()
 
-# send(pid, {:stop, "help!"})
+send(pid, {:stop, "help!"})
 
 PledgeServer.set_cache_size(4)
 
 IO.inspect(PledgeServer.create_pledge("larry", 10))
-PledgeServer.clear()
-IO.inspect(PledgeServer.create_pledge("moe", 20))
-IO.inspect(PledgeServer.create_pledge("curly", 30))
-IO.inspect(PledgeServer.create_pledge("daisy", 40))
+# PledgeServer.clear()
+# IO.inspect(PledgeServer.create_pledge("moe", 20))
+# IO.inspect(PledgeServer.create_pledge("curly", 30))
+# IO.inspect(PledgeServer.create_pledge("daisy", 40))
 
-IO.inspect(PledgeServer.create_pledge("grace", 50))
+# IO.inspect(PledgeServer.create_pledge("grace", 50))
 
 IO.inspect(PledgeServer.recent_pledges())
 
